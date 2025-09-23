@@ -3,7 +3,7 @@
 AirVue is a **real-time, interactive AQI (Air Quality Index) dashboard** that visualizes simulated data from **3,500+ monitoring stations** on a sleek dark-blue, glassmorphism UI.  
 It includes an interactive Leaflet map (clustered markers + heatmap), a live-updating Chart.js bar chart of the most polluted locations, a real-time feed, and smooth GSAP animations.
 
-✨ **Live Demo:** *(Add your link here)*
+✨ **Live Demo:** *https://airvue.onrender.com/*
 
 ---
 
