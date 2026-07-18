@@ -5,7 +5,13 @@ let currentView = 'global';
 let globalAQIData = [];
 let comparisonChart;
 
-gsap.registerPlugin(ScrollToPlugin);
+// --- Optimization #6: Cache DOM references ---
+let domCache = {};
+
+// --- Optimization #5: Page Visibility API ---
+let feedIntervalId = null;
+let chartIntervalId = null;
+let isPageVisible = true;
 
 const aqiLevels = [
     { range: [0, 50], status: 'Good', color: '#00e400', textColor: '#000', borderColor: 'rgba(0,0,0,0.2)' },
@@ -15,6 +21,25 @@ const aqiLevels = [
     { range: [201, 300], status: 'Very Unhealthy', color: '#8f3f97', textColor: '#fff', borderColor: 'rgba(0,0,0,0.2)' },
     { range: [301, Infinity], status: 'Hazardous', color: '#7e0023', textColor: '#fff', borderColor: 'rgba(0,0,0,0.2)' }
 ];
+
+// --- Optimization #1: O(1) AQI lookup via precomputed table ---
+const aqiLookup = new Array(502);
+(function buildAQILookup() {
+    for (let aqi = 0; aqi <= 501; aqi++) {
+        for (let j = 0; j < aqiLevels.length; j++) {
+            if (aqi >= aqiLevels[j].range[0] && aqi <= aqiLevels[j].range[1]) {
+                aqiLookup[aqi] = aqiLevels[j];
+                break;
+            }
+        }
+        if (!aqiLookup[aqi]) aqiLookup[aqi] = aqiLevels[aqiLevels.length - 1];
+    }
+})();
+
+function getAQIDetails(aqi) {
+    const clamped = Math.min(Math.max(0, Math.round(aqi)), 501);
+    return aqiLookup[clamped];
+}
 
 const cityAreas = {
     'Delhi': [
@@ -265,6 +290,10 @@ const baseCities = [
     { city: "Beijing", country: "China", lat: 39.9042, lng: 116.4074 }, { city: "Karachi", country: "Pakistan", lat: 24.8607, lng: 67.0011 }, { city: "Dhaka", country: "Bangladesh", lat: 23.8103, lng: 90.4125 }, { city: "London", country: "UK", lat: 51.5074, lng: -0.1278 }, { city: "New York", country: "USA", lat: 40.7128, lng: -74.0060 }, { city: "Sydney", country: "Australia", lat: -33.8688, lng: 151.2093 }, { city: "Dubai", country: "UAE", lat: 25.2770, lng: 55.2962 }
 ];
 
+// --- Optimization #8: Pre-split city arrays ---
+const indiaCities = baseCities.filter(c => c.country === 'India');
+const globalCities = baseCities.filter(c => c.country !== 'India');
+
 function getRandomArea(cityName) {
     const areas = cityAreas[cityName];
     if (areas && areas.length > 0) {
@@ -273,54 +302,48 @@ function getRandomArea(cityName) {
     return null;
 }
 
-function generateDenseData(baseData, targetCount) {
-    const data = [];
-    const indiaCities = baseData.filter(c => c.country === 'India');
-    const globalCities = baseData.filter(c => c.country !== 'India');
+function generateDenseData(targetCount) {
+    const data = new Array(targetCount);
     const indiaTarget = Math.floor(targetCount * 0.95);
+    const indiaLen = indiaCities.length;
+    const globalLen = globalCities.length;
     for (let i = 0; i < targetCount; i++) {
         const base = (i < indiaTarget) 
-            ? indiaCities[i % indiaCities.length] 
-            : globalCities[i % globalCities.length];
-        let aqi;
-        if(base.country === 'India'){
-            aqi = Math.floor(Math.random() * 250) + 50; 
-        } else {
-            aqi = Math.floor(Math.random() * 200) + 1;
-        }
+            ? indiaCities[i % indiaLen] 
+            : globalCities[(i - indiaTarget) % globalLen];
+        const aqi = (base.country === 'India')
+            ? (Math.random() * 250 + 50) | 0
+            : (Math.random() * 200 + 1) | 0;
         const area = getRandomArea(base.city);
         let lat, lng, locationName;
         if (area) {
-            // Use the area's real coordinates with a tiny jitter (~1km)
             lat = area.lat + (Math.random() - 0.5) * 0.02;
             lng = area.lng + (Math.random() - 0.5) * 0.02;
             locationName = `${area.name}, ${base.city}`;
         } else {
-            // No area data — use city center with moderate spread (~15km)
             const spread = (base.country === 'India') ? 0.3 : 0.5;
             lat = base.lat + (Math.random() - 0.5) * spread;
             lng = base.lng + (Math.random() - 0.5) * spread;
             locationName = base.city;
         }
-        data.push({
+        data[i] = {
             city: base.city,
             locationName: locationName,
             country: base.country,
             lat: lat,
             lng: lng,
             aqi: aqi
-        });
+        };
     }
     return data;
 }
 
-function getAQIDetails(aqi) {
-    return aqiLevels.find(level => aqi >= level.range[0] && aqi <= level.range[1]) || aqiLevels[aqiLevels.length - 1];
-}
-
+// --- Optimization #9: Particle count reduction on mobile ---
 function createBackgroundParticles() {
-    const particlesContainer = document.getElementById('particles');
-    const particleCount = 30;
+    const particlesContainer = domCache.particles;
+    const isMobile = window.innerWidth < 768;
+    const particleCount = isMobile ? 15 : 30;
+    const fragment = document.createDocumentFragment();
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
@@ -328,12 +351,13 @@ function createBackgroundParticles() {
         particle.style.width = particle.style.height = (Math.random() * 4 + 2) + 'px';
         particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
         particle.style.animationDelay = Math.random() * 20 + 's';
-        particlesContainer.appendChild(particle);
+        fragment.appendChild(particle);
     }
+    particlesContainer.appendChild(fragment);
 }
 
 function populateLegend() {
-    const legendContainer = document.getElementById('legend');
+    const legendContainer = domCache.legend;
     let content = '<h3><i class="fas fa-palette"></i> AQI Scale</h3>';
     aqiLevels.forEach(level => {
         content += `
@@ -356,7 +380,7 @@ function initMap() {
         minZoom: 2,
         maxZoom: 18
     }).addTo(map);
-    globalAQIData = generateDenseData(baseCities, 3500);
+    globalAQIData = generateDenseData(3500);
     setTimeout(() => {
         renderAll();
         initComparisonChart();
@@ -376,6 +400,7 @@ function renderAll() {
     updateStats();
 }
 
+// --- Optimization #4: Lazy popup binding ---
 function addGlobalMarkers() {
     markerLayer = L.markerClusterGroup({
         chunkedLoading: true,
@@ -391,7 +416,7 @@ function addGlobalMarkers() {
     });
     let i = 0;
     function processChunk() {
-        const chunkSize = 250;
+        const chunkSize = 500; // Larger chunks = fewer rAF cycles
         for (let j = 0; j < chunkSize && i < globalAQIData.length; j++, i++) {
             const location = globalAQIData[i];
             const details = getAQIDetails(location.aqi);
@@ -401,13 +426,21 @@ function addGlobalMarkers() {
                 iconSize: [42, 30], iconAnchor: [21, 30], popupAnchor: [0, -30]
             });
             const marker = L.marker([location.lat, location.lng], { icon: icon });
-            const popupContent = `
-                <div class="custom-popup">
-                    <div class="popup-title">${location.locationName}, ${location.country}</div>
-                    <div class="popup-aqi" style="color: ${details.color};">AQI: ${location.aqi}</div>
-                    <div class="popup-status" style="background-color: ${details.color}; color:${details.textColor}">${details.status}</div>
-                </div>`;
-            marker.bindPopup(popupContent);
+            // Lazy popup: build content only when clicked
+            marker._aqiDataIndex = i - 1;
+            marker.on('click', function() {
+                const idx = this._aqiDataIndex;
+                const loc = globalAQIData[idx];
+                if (!loc) return;
+                const det = getAQIDetails(loc.aqi);
+                const popupContent = `
+                    <div class="custom-popup">
+                        <div class="popup-title">${loc.locationName}, ${loc.country}</div>
+                        <div class="popup-aqi" style="color: ${det.color};">AQI: ${loc.aqi}</div>
+                        <div class="popup-status" style="background-color: ${det.color}; color:${det.textColor}">${det.status}</div>
+                    </div>`;
+                this.bindPopup(popupContent).openPopup();
+            });
             markerLayer.addLayer(marker);
         }
         if (i < globalAQIData.length) {
@@ -432,19 +465,33 @@ function clearMap() {
     if (heatmapLayer) { map.removeLayer(heatmapLayer); heatmapLayer = null; }
 }
 
+// --- Optimization #2 & #7: Single-pass stats + avoid DOM rebuild ---
+let statsInitialized = false;
 function updateStats() {
-    const totalStations = globalAQIData.length;
-    const avgAQI = Math.round(globalAQIData.reduce((sum, city) => sum + city.aqi, 0) / totalStations);
-    const goodAir = globalAQIData.filter(city => city.aqi <= 50).length;
-    const hazardousAir = globalAQIData.filter(city => city.aqi > 300).length;
-    const stats = { totalStations, avgAQI, goodAir, hazardousAir };
-    const container = document.getElementById('statsGrid');
-    container.innerHTML = `
-        <div class="stat-item"><div class="stat-number" data-stat="totalStations">0</div><div class="stat-label">Stations</div></div>
-        <div class="stat-item"><div class="stat-number" data-stat="avgAQI">0</div><div class="stat-label">Avg AQI</div></div>
-        <div class="stat-item"><div class="stat-number" data-stat="goodAir">0</div><div class="stat-label">Good Air</div></div>
-        <div class="stat-item"><div class="stat-number" data-stat="hazardousAir">0</div><div class="stat-label">Hazardous</div></div>
-    `;
+    const len = globalAQIData.length;
+    let sum = 0, goodAir = 0, hazardousAir = 0;
+    for (let i = 0; i < len; i++) {
+        const aqi = globalAQIData[i].aqi;
+        sum += aqi;
+        if (aqi <= 50) goodAir++;
+        else if (aqi > 300) hazardousAir++;
+    }
+    const stats = {
+        totalStations: len,
+        avgAQI: Math.round(sum / len),
+        goodAir: goodAir,
+        hazardousAir: hazardousAir
+    };
+    const container = domCache.statsGrid;
+    if (!statsInitialized) {
+        container.innerHTML = `
+            <div class="stat-item"><div class="stat-number" data-stat="totalStations">0</div><div class="stat-label">Stations</div></div>
+            <div class="stat-item"><div class="stat-number" data-stat="avgAQI">0</div><div class="stat-label">Avg AQI</div></div>
+            <div class="stat-item"><div class="stat-number" data-stat="goodAir">0</div><div class="stat-label">Good Air</div></div>
+            <div class="stat-item"><div class="stat-number" data-stat="hazardousAir">0</div><div class="stat-label">Hazardous</div></div>
+        `;
+        statsInitialized = true;
+    }
     for (const key in stats) {
         gsap.to(container.querySelector(`[data-stat="${key}"]`), {
             duration: 2, innerText: stats[key], roundProps: "innerText", ease: "power2.out", delay: 0.5
@@ -452,8 +499,9 @@ function updateStats() {
     }
 }
 
+// --- Optimization #5: Page Visibility API for interval management ---
 function startLiveFeed() {
-    const feedElement = document.getElementById('liveFeed');
+    const feedElement = domCache.liveFeed;
     function addUpdate(message, aqiLevel) {
         const details = getAQIDetails(aqiLevel);
         const time = new Date().toLocaleTimeString();
@@ -464,24 +512,37 @@ function startLiveFeed() {
         feedElement.prepend(item);
         gsap.to(item, { opacity: 1, x: 0, duration: 0.6, ease: 'power2.out' });
         if (feedElement.children.length > 12) {
-            gsap.to(feedElement.lastChild, { 
+            const lastChild = feedElement.lastChild;
+            gsap.to(lastChild, { 
                 opacity: 0, height: 0, margin: 0, padding: 0, duration: 0.4, 
-                onComplete: () => feedElement.lastChild.remove() 
+                onComplete: () => { if (lastChild.parentNode) lastChild.remove(); }
             });
         }
     }
     setTimeout(() => addUpdate("System initialized successfully", 50), 1000);
     setTimeout(() => addUpdate("Delhi AQI alert: 285 - Very Unhealthy", 285), 2000);
     setTimeout(() => addUpdate("Shimla maintains excellent air: 35", 35), 3000);
-    setInterval(() => {
+
+    function feedTick() {
+        if (!isPageVisible) return;
         const randomIndex = Math.floor(Math.random() * globalAQIData.length);
         const randomStation = globalAQIData[randomIndex];
         const newAQI = Math.max(0, randomStation.aqi + Math.floor(Math.random() * 20) - 10);
         globalAQIData[randomIndex].aqi = newAQI;
         addUpdate(`${randomStation.locationName} updated: ${newAQI}`, newAQI);
-    }, 4000);
-    setInterval(updateComparisonChart, 5000);
+    }
+    function chartTick() {
+        if (!isPageVisible) return;
+        updateComparisonChart();
+    }
+    feedIntervalId = setInterval(feedTick, 4000);
+    chartIntervalId = setInterval(chartTick, 5000);
 }
+
+// Page Visibility API: pause background work
+document.addEventListener('visibilitychange', function() {
+    isPageVisible = !document.hidden;
+});
 
 function setView(view, btn) {
     if (currentView === view) return;
@@ -495,11 +556,12 @@ function setView(view, btn) {
 function refreshData() {
     showLoading();
     setTimeout(() => {
-        globalAQIData = generateDenseData(baseCities, 3500);
+        globalAQIData = generateDenseData(3500);
+        statsInitialized = false; // Force stats DOM rebuild with fresh data
         renderAll();
         updateComparisonChart();
         hideLoading();
-        const feedElement = document.getElementById('liveFeed');
+        const feedElement = domCache.liveFeed;
         const item = document.createElement('div');
         item.className = 'feed-item';
         item.style.borderLeftColor = '#4facfe';
@@ -510,13 +572,13 @@ function refreshData() {
 }
 
 function showLoading() {
-    const overlay = document.getElementById('loadingOverlay');
+    const overlay = domCache.loadingOverlay;
     overlay.style.display = 'flex';
     gsap.to(overlay, { opacity: 1, duration: 0.4 });
 }
 
 function hideLoading() {
-    const overlay = document.getElementById('loadingOverlay');
+    const overlay = domCache.loadingOverlay;
     gsap.to(overlay, { opacity: 0, duration: 0.6, onComplete: () => overlay.style.display = 'none' });
 }
 
@@ -533,7 +595,7 @@ function scrollToTop() {
 
 function initComparisonChart() {
     const ctx = document.getElementById('comparisonChart').getContext('2d');
-    const topCities = [...globalAQIData].sort((a, b) => b.aqi - a.aqi).slice(0, 15);
+    const topCities = getTopK(globalAQIData, 15);
 
     const data = {
         labels: topCities.map(c => c.locationName),
@@ -551,6 +613,7 @@ function initComparisonChart() {
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'x',
+        animation: { duration: 600 },
         plugins: {
             legend: {
                 display: false
@@ -597,16 +660,53 @@ function initComparisonChart() {
     });
 }
 
+// --- Optimization #3: Efficient top-K using partial selection ---
+function getTopK(arr, k) {
+    if (arr.length <= k) return [...arr].sort((a, b) => b.aqi - a.aqi);
+    // Maintain a min-heap of size k for the top-k highest AQI values
+    const heap = arr.slice(0, k);
+    heap.sort((a, b) => a.aqi - b.aqi); // Sort ascending so heap[0] is the smallest
+    let minVal = heap[0].aqi;
+    for (let i = k; i < arr.length; i++) {
+        if (arr[i].aqi > minVal) {
+            heap[0] = arr[i];
+            // Bubble down to maintain min-heap property
+            let idx = 0;
+            while (true) {
+                let smallest = idx;
+                const left = 2 * idx + 1;
+                const right = 2 * idx + 2;
+                if (left < k && heap[left].aqi < heap[smallest].aqi) smallest = left;
+                if (right < k && heap[right].aqi < heap[smallest].aqi) smallest = right;
+                if (smallest === idx) break;
+                const tmp = heap[idx]; heap[idx] = heap[smallest]; heap[smallest] = tmp;
+                idx = smallest;
+            }
+            minVal = heap[0].aqi;
+        }
+    }
+    return heap.sort((a, b) => b.aqi - a.aqi);
+}
+
 function updateComparisonChart() {
     if (!comparisonChart) return;
-    const topCities = [...globalAQIData].sort((a, b) => b.aqi - a.aqi).slice(0, 15);
+    const topCities = getTopK(globalAQIData, 15);
     comparisonChart.data.labels = topCities.map(c => c.locationName);
     comparisonChart.data.datasets[0].data = topCities.map(c => c.aqi);
     comparisonChart.data.datasets[0].backgroundColor = topCities.map(c => getAQIDetails(c.aqi).color);
-    comparisonChart.update();
+    comparisonChart.update('none'); // Skip animation for periodic updates
 }
 
+// --- Optimization #6: Cache DOM references at init ---
 document.addEventListener('DOMContentLoaded', function() {
+    domCache = {
+        particles: document.getElementById('particles'),
+        legend: document.getElementById('legend'),
+        statsGrid: document.getElementById('statsGrid'),
+        liveFeed: document.getElementById('liveFeed'),
+        loadingOverlay: document.getElementById('loadingOverlay')
+    };
+    gsap.registerPlugin(ScrollToPlugin);
     createBackgroundParticles();
     populateLegend();
     initMap();
