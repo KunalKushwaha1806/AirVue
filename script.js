@@ -17,26 +17,246 @@ const aqiLevels = [
 ];
 
 const cityAreas = {
-    'Delhi': ['Connaught Place', 'Karol Bagh', 'Lajpat Nagar', 'Rohini', 'Dwarka', 'Vasant Kunj', 'Chandni Chowk', 'India Gate', 'Lodi Road', 'Nehru Place'],
-    'Mumbai': ['Bandra', 'Andheri', 'Borivali', 'Powai', 'Worli', 'Colaba', 'Juhu', 'Malad', 'Thane', 'Navi Mumbai'],
-    'Bangalore': ['Koramangala', 'Indiranagar', 'Whitefield', 'Electronic City', 'Jayanagar', 'Malleshwaram', 'HSR Layout', 'BTM Layout', 'Marathahalli', 'Yelahanka'],
-    'Chennai': ['T Nagar', 'Adyar', 'Velachery', 'Anna Nagar', 'Tambaram', 'Porur', 'OMR', 'ECR', 'Mylapore', 'Guindy'],
-    'Kolkata': ['Park Street', 'Salt Lake', 'Howrah', 'Ballygunge', 'Esplanade', 'Dum Dum', 'Tollygunge', 'New Town', 'Behala', 'Jadavpur'],
-    'Hyderabad': ['Banjara Hills', 'Jubilee Hills', 'HITEC City', 'Secunderabad', 'Gachibowli', 'Madhapur', 'Kondapur', 'Kukatpally', 'Dilsukhnagar', 'Ameerpet'],
-    'Pune': ['Koregaon Park', 'Aundh', 'Baner', 'Hinjewadi', 'Kothrud', 'Deccan', 'Camp', 'Hadapsar', 'Wakad', 'Pimpri'],
-    'Ahmedabad': ['Satellite', 'Bopal', 'Vastrapur', 'Navrangpura', 'Maninagar', 'Ghatlodia', 'Prahlad Nagar', 'SG Highway', 'CG Road', 'Sarkhej'],
-    'Jaipur': ['Pink City', 'Malviya Nagar', 'Vaishali Nagar', 'Mansarovar', 'Jagatpura', 'C-Scheme', 'Civil Lines', 'Sanganer', 'Tonk Road', 'MI Road'],
-    'Lucknow': ['Hazratganj', 'Gomti Nagar', 'Aliganj', 'Indira Nagar', 'Aminabad', 'Chowk', 'Alambagh', 'Mahanagar', 'Kaiserbagh', 'Rajajipuram'],
-    'Kanpur': ['Civil Lines', 'Swaroop Nagar', 'Kidwai Nagar', 'Govind Nagar', 'Kalyanpur', 'Barra', 'Kakadeo', 'Panki', 'Arya Nagar', 'Mall Road'],
-    'Agra': ['Taj Ganj', 'Sadar Bazaar', 'Civil Lines', 'Dayalbagh', 'Sikandra', 'Kamla Nagar', 'Sanjay Place', 'Lohamandi', 'Raja Ki Mandi', 'Fatehabad Road'],
-    'Varanasi': ['Godowlia', 'Lanka', 'Sigra', 'Mahmoorganj', 'Cantonment', 'Sarnath', 'Assi Ghat', 'Dashashwamedh', 'Maldahiya', 'Nadesar'],
-    'Patna': ['Boring Road', 'Fraser Road', 'Kankarbagh', 'Rajendra Nagar', 'Patliputra', 'Danapur', 'Gandhi Maidan', 'Bankipore', 'Kurji', 'Digha'],
-    'Indore': ['Vijay Nagar', 'Palasia', 'Bhopal Road', 'MG Road', 'Rajwada', 'Sarafa', 'Scheme 78', 'AB Road', 'Rau', 'Dewas Naka'],
-    'Bhopal': ['New Market', 'MP Nagar', 'Arera Colony', 'TT Nagar', 'Shahpura', 'Kolar Road', 'Berasia Road', 'Hoshangabad Road', 'Raisen Road', 'Habibganj'],
-    'Beijing': ['Chaoyang', 'Haidian', 'Xicheng', 'Dongcheng', 'Fengtai', 'Shijingshan', 'Mentougou', 'Fangshan', 'Tongzhou', 'Shunyi'],
-    'London': ['Westminster', 'Camden', 'Kensington', 'Greenwich', 'Hackney', 'Tower Hamlets', 'Southwark', 'Lambeth', 'Wandsworth', 'Hammersmith'],
-    'New York': ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'Harlem', 'SoHo', 'Chelsea', 'Upper East Side', 'Lower East Side'],
-    'Dubai': ['Downtown', 'Marina', 'JBR', 'Deira', 'Bur Dubai', 'Jumeirah', 'Business Bay', 'DIFC', 'JLT', 'Discovery Gardens']
+    'Delhi': [
+        { name: 'Connaught Place', lat: 28.6315, lng: 77.2167 },
+        { name: 'Karol Bagh', lat: 28.6519, lng: 77.1905 },
+        { name: 'Lajpat Nagar', lat: 28.5677, lng: 77.2433 },
+        { name: 'Rohini', lat: 28.7496, lng: 77.0654 },
+        { name: 'Dwarka', lat: 28.5921, lng: 77.0460 },
+        { name: 'Vasant Kunj', lat: 28.5193, lng: 77.1571 },
+        { name: 'Chandni Chowk', lat: 28.6506, lng: 77.2334 },
+        { name: 'India Gate', lat: 28.6129, lng: 77.2295 },
+        { name: 'Lodi Road', lat: 28.5933, lng: 77.2252 },
+        { name: 'Nehru Place', lat: 28.5494, lng: 77.2517 }
+    ],
+    'Mumbai': [
+        { name: 'Bandra', lat: 19.0596, lng: 72.8295 },
+        { name: 'Andheri', lat: 19.1197, lng: 72.8464 },
+        { name: 'Borivali', lat: 19.2307, lng: 72.8567 },
+        { name: 'Powai', lat: 19.1176, lng: 72.9060 },
+        { name: 'Worli', lat: 19.0176, lng: 72.8150 },
+        { name: 'Colaba', lat: 18.9067, lng: 72.8147 },
+        { name: 'Juhu', lat: 19.1075, lng: 72.8263 },
+        { name: 'Malad', lat: 19.1874, lng: 72.8484 },
+        { name: 'Thane', lat: 19.2183, lng: 72.9781 },
+        { name: 'Navi Mumbai', lat: 19.0330, lng: 73.0297 }
+    ],
+    'Bangalore': [
+        { name: 'Koramangala', lat: 12.9352, lng: 77.6245 },
+        { name: 'Indiranagar', lat: 12.9784, lng: 77.6408 },
+        { name: 'Whitefield', lat: 12.9698, lng: 77.7500 },
+        { name: 'Electronic City', lat: 12.8440, lng: 77.6600 },
+        { name: 'Jayanagar', lat: 12.9308, lng: 77.5838 },
+        { name: 'Malleshwaram', lat: 13.0035, lng: 77.5647 },
+        { name: 'HSR Layout', lat: 12.9116, lng: 77.6474 },
+        { name: 'BTM Layout', lat: 12.9166, lng: 77.6101 },
+        { name: 'Marathahalli', lat: 12.9591, lng: 77.7009 },
+        { name: 'Yelahanka', lat: 13.1007, lng: 77.5963 }
+    ],
+    'Chennai': [
+        { name: 'T Nagar', lat: 13.0418, lng: 80.2341 },
+        { name: 'Adyar', lat: 13.0063, lng: 80.2574 },
+        { name: 'Velachery', lat: 12.9815, lng: 80.2180 },
+        { name: 'Anna Nagar', lat: 13.0850, lng: 80.2101 },
+        { name: 'Tambaram', lat: 12.9249, lng: 80.1000 },
+        { name: 'Porur', lat: 13.0382, lng: 80.1564 },
+        { name: 'OMR', lat: 12.9600, lng: 80.2500 },
+        { name: 'ECR', lat: 12.9800, lng: 80.2600 },
+        { name: 'Mylapore', lat: 13.0339, lng: 80.2676 },
+        { name: 'Guindy', lat: 13.0067, lng: 80.2206 }
+    ],
+    'Kolkata': [
+        { name: 'Park Street', lat: 22.5509, lng: 88.3521 },
+        { name: 'Salt Lake', lat: 22.5958, lng: 88.4012 },
+        { name: 'Howrah', lat: 22.5958, lng: 88.2636 },
+        { name: 'Ballygunge', lat: 22.5292, lng: 88.3634 },
+        { name: 'Esplanade', lat: 22.5636, lng: 88.3519 },
+        { name: 'Dum Dum', lat: 22.6228, lng: 88.4267 },
+        { name: 'Tollygunge', lat: 22.4988, lng: 88.3479 },
+        { name: 'New Town', lat: 22.5800, lng: 88.4800 },
+        { name: 'Behala', lat: 22.4889, lng: 88.3091 },
+        { name: 'Jadavpur', lat: 22.4988, lng: 88.3705 }
+    ],
+    'Hyderabad': [
+        { name: 'Banjara Hills', lat: 17.4156, lng: 78.4347 },
+        { name: 'Jubilee Hills', lat: 17.4318, lng: 78.4076 },
+        { name: 'HITEC City', lat: 17.4435, lng: 78.3772 },
+        { name: 'Secunderabad', lat: 17.4399, lng: 78.4983 },
+        { name: 'Gachibowli', lat: 17.4401, lng: 78.3489 },
+        { name: 'Madhapur', lat: 17.4484, lng: 78.3908 },
+        { name: 'Kondapur', lat: 17.4577, lng: 78.3685 },
+        { name: 'Kukatpally', lat: 17.4849, lng: 78.3997 },
+        { name: 'Dilsukhnagar', lat: 17.3688, lng: 78.5247 },
+        { name: 'Ameerpet', lat: 17.4375, lng: 78.4483 }
+    ],
+    'Pune': [
+        { name: 'Koregaon Park', lat: 18.5362, lng: 73.8930 },
+        { name: 'Aundh', lat: 18.5584, lng: 73.8076 },
+        { name: 'Baner', lat: 18.5590, lng: 73.7868 },
+        { name: 'Hinjewadi', lat: 18.5913, lng: 73.7389 },
+        { name: 'Kothrud', lat: 18.5075, lng: 73.8077 },
+        { name: 'Deccan', lat: 18.5175, lng: 73.8390 },
+        { name: 'Camp', lat: 18.5130, lng: 73.8794 },
+        { name: 'Hadapsar', lat: 18.5089, lng: 73.9260 },
+        { name: 'Wakad', lat: 18.5987, lng: 73.7613 },
+        { name: 'Pimpri', lat: 18.6298, lng: 73.7997 }
+    ],
+    'Ahmedabad': [
+        { name: 'Satellite', lat: 23.0269, lng: 72.5299 },
+        { name: 'Bopal', lat: 23.0347, lng: 72.4645 },
+        { name: 'Vastrapur', lat: 23.0369, lng: 72.5272 },
+        { name: 'Navrangpura', lat: 23.0394, lng: 72.5569 },
+        { name: 'Maninagar', lat: 23.0021, lng: 72.6047 },
+        { name: 'Ghatlodia', lat: 23.0621, lng: 72.5434 },
+        { name: 'Prahlad Nagar', lat: 23.0147, lng: 72.5130 },
+        { name: 'SG Highway', lat: 23.0337, lng: 72.5067 },
+        { name: 'CG Road', lat: 23.0289, lng: 72.5660 },
+        { name: 'Sarkhej', lat: 22.9853, lng: 72.4976 }
+    ],
+    'Jaipur': [
+        { name: 'Pink City', lat: 26.9237, lng: 75.8267 },
+        { name: 'Malviya Nagar', lat: 26.8551, lng: 75.8049 },
+        { name: 'Vaishali Nagar', lat: 26.9103, lng: 75.7350 },
+        { name: 'Mansarovar', lat: 26.8673, lng: 75.7620 },
+        { name: 'Jagatpura', lat: 26.8500, lng: 75.8310 },
+        { name: 'C-Scheme', lat: 26.9050, lng: 75.7867 },
+        { name: 'Civil Lines', lat: 26.9300, lng: 75.8050 },
+        { name: 'Sanganer', lat: 26.8306, lng: 75.7837 },
+        { name: 'Tonk Road', lat: 26.8700, lng: 75.8000 },
+        { name: 'MI Road', lat: 26.9168, lng: 75.8021 }
+    ],
+    'Lucknow': [
+        { name: 'Hazratganj', lat: 26.8506, lng: 80.9512 },
+        { name: 'Gomti Nagar', lat: 26.8566, lng: 80.9917 },
+        { name: 'Aliganj', lat: 26.8894, lng: 80.9387 },
+        { name: 'Indira Nagar', lat: 26.8728, lng: 80.9929 },
+        { name: 'Aminabad', lat: 26.8537, lng: 80.9253 },
+        { name: 'Chowk', lat: 26.8603, lng: 80.9128 },
+        { name: 'Alambagh', lat: 26.8149, lng: 80.9068 },
+        { name: 'Mahanagar', lat: 26.8764, lng: 80.9359 },
+        { name: 'Kaiserbagh', lat: 26.8491, lng: 80.9392 },
+        { name: 'Rajajipuram', lat: 26.8571, lng: 80.8883 }
+    ],
+    'Kanpur': [
+        { name: 'Civil Lines', lat: 26.4612, lng: 80.3321 },
+        { name: 'Swaroop Nagar', lat: 26.4571, lng: 80.3445 },
+        { name: 'Kidwai Nagar', lat: 26.4429, lng: 80.3395 },
+        { name: 'Govind Nagar', lat: 26.4680, lng: 80.3410 },
+        { name: 'Kalyanpur', lat: 26.4500, lng: 80.2900 },
+        { name: 'Barra', lat: 26.4300, lng: 80.3200 },
+        { name: 'Kakadeo', lat: 26.4362, lng: 80.3600 },
+        { name: 'Panki', lat: 26.4650, lng: 80.2700 },
+        { name: 'Arya Nagar', lat: 26.4550, lng: 80.3250 },
+        { name: 'Mall Road', lat: 26.4600, lng: 80.3380 }
+    ],
+    'Agra': [
+        { name: 'Taj Ganj', lat: 27.1710, lng: 78.0421 },
+        { name: 'Sadar Bazaar', lat: 27.1900, lng: 78.0000 },
+        { name: 'Civil Lines', lat: 27.2000, lng: 78.0100 },
+        { name: 'Dayalbagh', lat: 27.2200, lng: 78.0050 },
+        { name: 'Sikandra', lat: 27.2188, lng: 77.9500 },
+        { name: 'Kamla Nagar', lat: 27.1950, lng: 78.0200 },
+        { name: 'Sanjay Place', lat: 27.1900, lng: 78.0100 },
+        { name: 'Lohamandi', lat: 27.1800, lng: 78.0200 },
+        { name: 'Raja Ki Mandi', lat: 27.1850, lng: 78.0100 },
+        { name: 'Fatehabad Road', lat: 27.1670, lng: 78.0300 }
+    ],
+    'Varanasi': [
+        { name: 'Godowlia', lat: 25.3114, lng: 83.0100 },
+        { name: 'Lanka', lat: 25.2800, lng: 82.9900 },
+        { name: 'Sigra', lat: 25.3200, lng: 82.9800 },
+        { name: 'Mahmoorganj', lat: 25.3100, lng: 82.9600 },
+        { name: 'Cantonment', lat: 25.3300, lng: 82.9500 },
+        { name: 'Sarnath', lat: 25.3736, lng: 83.0257 },
+        { name: 'Assi Ghat', lat: 25.2900, lng: 83.0000 },
+        { name: 'Dashashwamedh', lat: 25.3100, lng: 83.0100 },
+        { name: 'Maldahiya', lat: 25.3150, lng: 82.9850 },
+        { name: 'Nadesar', lat: 25.3250, lng: 82.9900 }
+    ],
+    'Patna': [
+        { name: 'Boring Road', lat: 25.6078, lng: 85.1225 },
+        { name: 'Fraser Road', lat: 25.6100, lng: 85.1400 },
+        { name: 'Kankarbagh', lat: 25.5867, lng: 85.1200 },
+        { name: 'Rajendra Nagar', lat: 25.6105, lng: 85.1050 },
+        { name: 'Patliputra', lat: 25.6200, lng: 85.1000 },
+        { name: 'Danapur', lat: 25.6200, lng: 85.0500 },
+        { name: 'Gandhi Maidan', lat: 25.6130, lng: 85.1459 },
+        { name: 'Bankipore', lat: 25.6150, lng: 85.1500 },
+        { name: 'Kurji', lat: 25.6300, lng: 85.1100 },
+        { name: 'Digha', lat: 25.6250, lng: 85.1050 }
+    ],
+    'Indore': [
+        { name: 'Vijay Nagar', lat: 22.7533, lng: 75.8930 },
+        { name: 'Palasia', lat: 22.7232, lng: 75.8743 },
+        { name: 'Bhopal Road', lat: 22.7500, lng: 75.9000 },
+        { name: 'MG Road', lat: 22.7196, lng: 75.8577 },
+        { name: 'Rajwada', lat: 22.7185, lng: 75.8552 },
+        { name: 'Sarafa', lat: 22.7174, lng: 75.8566 },
+        { name: 'Scheme 78', lat: 22.7300, lng: 75.8900 },
+        { name: 'AB Road', lat: 22.7100, lng: 75.8700 },
+        { name: 'Rau', lat: 22.6700, lng: 75.8700 },
+        { name: 'Dewas Naka', lat: 22.7500, lng: 75.8500 }
+    ],
+    'Bhopal': [
+        { name: 'New Market', lat: 23.2335, lng: 77.4230 },
+        { name: 'MP Nagar', lat: 23.2330, lng: 77.4310 },
+        { name: 'Arera Colony', lat: 23.2200, lng: 77.4400 },
+        { name: 'TT Nagar', lat: 23.2400, lng: 77.4100 },
+        { name: 'Shahpura', lat: 23.2100, lng: 77.4400 },
+        { name: 'Kolar Road', lat: 23.1850, lng: 77.4300 },
+        { name: 'Berasia Road', lat: 23.2900, lng: 77.4000 },
+        { name: 'Hoshangabad Road', lat: 23.2000, lng: 77.4700 },
+        { name: 'Raisen Road', lat: 23.2600, lng: 77.4600 },
+        { name: 'Habibganj', lat: 23.2292, lng: 77.4395 }
+    ],
+    'Beijing': [
+        { name: 'Chaoyang', lat: 39.9219, lng: 116.4435 },
+        { name: 'Haidian', lat: 39.9599, lng: 116.2982 },
+        { name: 'Xicheng', lat: 39.9122, lng: 116.3662 },
+        { name: 'Dongcheng', lat: 39.9283, lng: 116.4163 },
+        { name: 'Fengtai', lat: 39.8585, lng: 116.2870 },
+        { name: 'Shijingshan', lat: 39.9046, lng: 116.2225 },
+        { name: 'Mentougou', lat: 39.9405, lng: 116.1014 },
+        { name: 'Fangshan', lat: 39.7472, lng: 116.1430 },
+        { name: 'Tongzhou', lat: 39.9022, lng: 116.6569 },
+        { name: 'Shunyi', lat: 40.1302, lng: 116.6543 }
+    ],
+    'London': [
+        { name: 'Westminster', lat: 51.4975, lng: -0.1357 },
+        { name: 'Camden', lat: 51.5390, lng: -0.1426 },
+        { name: 'Kensington', lat: 51.5017, lng: -0.1912 },
+        { name: 'Greenwich', lat: 51.4834, lng: 0.0098 },
+        { name: 'Hackney', lat: 51.5450, lng: -0.0553 },
+        { name: 'Tower Hamlets', lat: 51.5203, lng: -0.0293 },
+        { name: 'Southwark', lat: 51.5031, lng: -0.0906 },
+        { name: 'Lambeth', lat: 51.4571, lng: -0.1231 },
+        { name: 'Wandsworth', lat: 51.4567, lng: -0.1910 },
+        { name: 'Hammersmith', lat: 51.4927, lng: -0.2239 }
+    ],
+    'New York': [
+        { name: 'Manhattan', lat: 40.7831, lng: -73.9712 },
+        { name: 'Brooklyn', lat: 40.6782, lng: -73.9442 },
+        { name: 'Queens', lat: 40.7282, lng: -73.7949 },
+        { name: 'Bronx', lat: 40.8448, lng: -73.8648 },
+        { name: 'Staten Island', lat: 40.5795, lng: -74.1502 },
+        { name: 'Harlem', lat: 40.8116, lng: -73.9465 },
+        { name: 'SoHo', lat: 40.7233, lng: -73.9983 },
+        { name: 'Chelsea', lat: 40.7465, lng: -74.0014 },
+        { name: 'Upper East Side', lat: 40.7736, lng: -73.9566 },
+        { name: 'Lower East Side', lat: 40.7150, lng: -73.9843 }
+    ],
+    'Dubai': [
+        { name: 'Downtown', lat: 25.1972, lng: 55.2744 },
+        { name: 'Marina', lat: 25.0805, lng: 55.1403 },
+        { name: 'JBR', lat: 25.0774, lng: 55.1326 },
+        { name: 'Deira', lat: 25.2750, lng: 55.3096 },
+        { name: 'Bur Dubai', lat: 25.2567, lng: 55.2980 },
+        { name: 'Jumeirah', lat: 25.2098, lng: 55.2557 },
+        { name: 'Business Bay', lat: 25.1860, lng: 55.2619 },
+        { name: 'DIFC', lat: 25.2048, lng: 55.2708 },
+        { name: 'JLT', lat: 25.0754, lng: 55.1442 },
+        { name: 'Discovery Gardens', lat: 25.0369, lng: 55.1476 }
+    ]
 };
 
 const baseCities = [
@@ -62,9 +282,6 @@ function generateDenseData(baseData, targetCount) {
         const base = (i < indiaTarget) 
             ? indiaCities[i % indiaCities.length] 
             : globalCities[i % globalCities.length];
-        const spread = (base.country === 'India') ? 1.5 : 4.0;
-        const latOffset = (Math.random() - 0.5) * spread;
-        const lngOffset = (Math.random() - 0.5) * spread;
         let aqi;
         if(base.country === 'India'){
             aqi = Math.floor(Math.random() * 250) + 50; 
@@ -72,13 +289,25 @@ function generateDenseData(baseData, targetCount) {
             aqi = Math.floor(Math.random() * 200) + 1;
         }
         const area = getRandomArea(base.city);
-        const locationName = area ? `${area}, ${base.city}` : base.city;
+        let lat, lng, locationName;
+        if (area) {
+            // Use the area's real coordinates with a tiny jitter (~1km)
+            lat = area.lat + (Math.random() - 0.5) * 0.02;
+            lng = area.lng + (Math.random() - 0.5) * 0.02;
+            locationName = `${area.name}, ${base.city}`;
+        } else {
+            // No area data — use city center with moderate spread (~15km)
+            const spread = (base.country === 'India') ? 0.3 : 0.5;
+            lat = base.lat + (Math.random() - 0.5) * spread;
+            lng = base.lng + (Math.random() - 0.5) * spread;
+            locationName = base.city;
+        }
         data.push({
             city: base.city,
             locationName: locationName,
             country: base.country,
-            lat: base.lat + latOffset,
-            lng: base.lng + lngOffset,
+            lat: lat,
+            lng: lng,
             aqi: aqi
         });
     }
