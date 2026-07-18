@@ -34,6 +34,7 @@ body {
     height: 100%;
     z-index: -1;
     overflow: hidden;
+    contain: strict;
 }
 
 .particle {
@@ -41,6 +42,7 @@ body {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 50%;
     animation: float 20s infinite linear;
+    will-change: transform, opacity;
 }
 
 @keyframes float {
@@ -164,22 +166,8 @@ body {
     font-size: 13px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    backdrop-filter: blur(10px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-}
-
-.aqi-marker::before {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: 14px;
-    background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent);
-    z-index: -1;
 }
 
 .aqi-marker:hover {
@@ -206,6 +194,7 @@ body {
     transform: translateY(30px);
     position: relative;
     overflow: hidden;
+    contain: content;
 }
 
 .panel-card::before {
@@ -351,6 +340,7 @@ body {
     max-height: 450px;
     overflow-y: auto;
     padding-right: 8px;
+    contain: content;
 }
 
 .live-feed::-webkit-scrollbar {
@@ -438,6 +428,7 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
+    will-change: transform;
 }
 
 .loading-text {
