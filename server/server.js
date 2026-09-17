@@ -31,7 +31,14 @@ setInterval(() => {
 
 // API Endpoints
 app.get('/api/stations', (req, res) => {
-    res.json(globalAQIData);
+    const view = req.query.view;
+    if (view === 'india') {
+        res.json(globalAQIData.filter(s => !s.isGlobal));
+    } else if (view === 'global') {
+        res.json(globalAQIData.filter(s => s.isGlobal));
+    } else {
+        res.json(globalAQIData);
+    }
 });
 
 app.get('/api/stats', (req, res) => {

@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Wind, 
-  Map, 
+  Map as MapIcon, 
+  Globe2,
   Flame, 
   RefreshCw, 
   Palette, 
   LineChart as LineChartIcon, 
   Rss, 
   BarChart3, 
-  ChevronUp 
+  ChevronUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -19,48 +20,33 @@ import { LiveFeed } from './components/LiveFeed';
 import { MapDashboard } from './components/MapDashboard';
 import { SearchFilter } from './components/SearchFilter';
 import { aqiLevels } from './utils/aqi';
+import type { Station, Stats, FeedItem, ViewMode } from './types/station';
 import './styles/global.css';
-
-interface Station {
-  id: number;
-  city: string;
-  locationName: string;
-  country: string;
-  lat: number;
-  lng: number;
-  aqi: number;
-}
-
-interface Stats {
-  totalStations: number;
-  avgAQI: number;
-  goodAir: number;
-  hazardousAir: number;
-}
-
-interface FeedItem {
-  time: string;
-  message: string;
-  aqi: number;
-}
 
 export const App: React.FC = () => {
   const [stations, setStations] = useState<Station[]>([]);
-  const [stats, setStats] = useState<Stats>({ totalStations: 0, avgAQI: 0, goodAir: 0, hazardousAir: 0 });
+  const [stats, setStats] = useState<Stats>({ 
+    totalStations: 0, 
+    avgAQI: 0, 
+    goodAir: 0, 
+    hazardousAir: 0,
+    safePercent: 0 
+  });
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [topStations, setTopStations] = useState<Station[]>([]);
-  const [currentView, setCurrentView] = useState<'global' | 'heatmap'>('global');
+  const [currentView, setCurrentView] = useState<ViewMode>('india');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState('all');
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
-  // Fetch all dashboard data from Node.js Express server
+  // Fetch all dashboard data from Express API
   const fetchDashboardData = useCallback(async (includeStations = true) => {
     try {
-      // Run fetches in parallel
       const fetchPromises: Promise<any>[] = [
         fetch('/api/stats').then(res => res.json()),
         fetch('/api/top-polluted?limit=15').then(res => res.json()),
@@ -80,19 +66,20 @@ export const App: React.FC = () => {
       if (includeStations) {
         setStations(results[3]);
       }
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (error) {
-      console.error("Error fetching AirVue data:", error);
+      console.error("Error fetching AirVue telemetry:", error);
     }
   }, []);
 
-  // Initial mount load
+  // Initial load
   useEffect(() => {
     fetchDashboardData(true).then(() => {
       setLoading(false);
     });
   }, [fetchDashboardData]);
 
-  // Periodic polling using Page Visibility API to save bandwidth/resources when tab is inactive
+  // Periodic polling
   useEffect(() => {
     let intervalId: any;
 
@@ -101,12 +88,11 @@ export const App: React.FC = () => {
         clearInterval(intervalId);
       } else {
         intervalId = setInterval(() => {
-          fetchDashboardData(true); // Fetch state updates
+          fetchDashboardData(true);
         }, 3000);
       }
     };
 
-    // Start interval
     intervalId = setInterval(() => {
       fetchDashboardData(true);
     }, 3000);
@@ -135,12 +121,16 @@ export const App: React.FC = () => {
       await fetch('/api/refresh', { method: 'POST' });
       await fetchDashboardData(true);
     } catch (err) {
-      console.error("Error refreshing data:", err);
+      console.error("Error refreshing telemetry:", err);
     } finally {
       setTimeout(() => {
         setRefreshing(false);
-      }, 800);
+      }, 700);
     }
+  };
+
+  const handleSelectStation = (station: Station | null) => {
+    setSelectedStation(station);
   };
 
   const scrollToTop = () => {
@@ -149,56 +139,98 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {/* Background Particles */}
+      {/* Dynamic Background Particles */}
       <ParticleBackground />
 
       {/* Header Panel */}
       <motion.header 
         className="glass-panel app-header"
-        initial={{ opacity: 0, y: -50 }}
+        initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
       >
-        <h1><Wind /> AirVue</h1>
-        <p className="subtitle">
-          Real-time global air quality monitoring dashboard. Visualizing live simulated telemetry from 3,500+ micro-stations across India and select international hubs.
-        </p>
+        <div className="header-badge-row">
+          <span className="live-status-badge">
+            <span className="pulsing-green-dot"></span>
+            Telemetry Stream Live
+          </span>
+          {lastUpdated && (
+            <span className="last-sync-tag">
+              Updated at {lastUpdated}
+            </span>
+          )}
+        </div>
 
-        {/* Global Controls */}
+        <div className="header-brand-row">
+          <div className="brand-icon-box">
+            <Wind size={36} />
+          </div>
+          <div className="brand-text-col">
+            <h1>AirVue <span className="brand-sub-badge">v2.0</span></h1>
+            <p className="subtitle">
+              Precision Air Quality Intelligence & Interactive Geocoded Telemetry. Monitoring real-time PM2.5, PM10 & AQI across 3,800+ stations.
+            </p>
+          </div>
+        </div>
+
+        {/* Global Controls & View Switcher */}
         <div className="controls-container">
+          <div className="view-mode-group">
+            <button 
+              className={`btn ${currentView === 'india' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentView('india');
+                setSelectedStation(null);
+              }}
+              title="Focus on India National Network"
+            >
+              <MapIcon size={16} /> India View
+            </button>
+            <button 
+              className={`btn ${currentView === 'global' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentView('global');
+                setSelectedStation(null);
+              }}
+              title="Compare with Global Hubs"
+            >
+              <Globe2 size={16} /> Global Hubs
+            </button>
+            <button 
+              className={`btn ${currentView === 'heatmap' ? 'active' : ''}`}
+              onClick={() => {
+                setCurrentView('heatmap');
+                setSelectedStation(null);
+              }}
+              title="Continuous Air Pollution Density Heatmap"
+            >
+              <Flame size={16} /> AQI Heatmap
+            </button>
+          </div>
+
           <button 
-            className={`btn ${currentView === 'global' ? 'active' : ''}`}
-            onClick={() => setCurrentView('global')}
-          >
-            <Map /> India View
-          </button>
-          <button 
-            className={`btn ${currentView === 'heatmap' ? 'active' : ''}`}
-            onClick={() => setCurrentView('heatmap')}
-          >
-            <Flame /> Heatmap
-          </button>
-          <button 
-            className="btn" 
+            className="btn btn-refresh" 
             onClick={handleRefresh}
             disabled={refreshing}
+            title="Recalibrate Simulation & Fetch Latest Telemetry"
           >
-            <RefreshCw className={refreshing ? 'animate-spin' : ''} /> 
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw className={refreshing ? 'animate-spin' : ''} size={15} /> 
+            {refreshing ? 'Syncing...' : 'Sync Data'}
           </button>
         </div>
       </motion.header>
 
-      {/* Main Grid: Map & Controls */}
+      {/* Main Dashboard Layout */}
       <div className="dashboard-grid">
-        {/* Left Side: Map Card */}
+        {/* Left: Map Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          className="map-column"
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
           {loading ? (
-            <div className="glass-panel map-card" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div className="glass-panel map-card flex-center">
               <div className="loading-spinner"></div>
             </div>
           ) : (
@@ -207,90 +239,125 @@ export const App: React.FC = () => {
               currentView={currentView}
               searchQuery={searchQuery}
               selectedSeverity={selectedSeverity}
+              selectedStation={selectedStation}
+              onSelectStation={handleSelectStation}
             />
           )}
         </motion.div>
 
-        {/* Right Side: Side Panels */}
+        {/* Right Side: Interactive Side Panels */}
         <div className="side-panel">
-          {/* Search Panel */}
+          {/* Search & Autocomplete Panel */}
           <motion.div 
             className="glass-panel"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <div className="panel-title"><Wind size={18} /> Search & Filter</div>
+            <div className="panel-title">
+              <Wind size={18} /> 
+              <span>Search & Telemetry Filters</span>
+            </div>
             <SearchFilter 
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               selectedSeverity={selectedSeverity}
               setSelectedSeverity={setSelectedSeverity}
+              stations={stations}
+              onSelectStation={handleSelectStation}
             />
           </motion.div>
 
-          {/* AQI Scale Legend Card */}
+          {/* Real-time Network Statistics */}
           <motion.div 
             className="glass-panel"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <div className="panel-title"><Palette size={18} /> AQI Classification</div>
-            <div className="legend-grid">
-              {aqiLevels.map(level => (
-                <div className="legend-item" key={level.status}>
-                  <div className="legend-color" style={{ backgroundColor: level.color }} />
-                  <div className="legend-text">
-                    <strong>{level.status}</strong> 
-                    ({level.range[0]}-{level.range[1] === Infinity ? '301+' : level.range[1]})
-                  </div>
-                </div>
-              ))}
+            <div className="panel-title">
+              <LineChartIcon size={18} /> 
+              <span>National Network Statistics</span>
             </div>
+            <StatisticsGrid stats={stats} />
           </motion.div>
 
-          {/* Stats Card */}
+          {/* AQI Scale Reference */}
           <motion.div 
             className="glass-panel"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
           >
-            <div className="panel-title"><LineChartIcon size={18} /> Live Statistics</div>
-            <StatisticsGrid stats={stats} />
+            <div className="panel-title">
+              <Palette size={18} /> 
+              <span>AQI Scale & Health Impact</span>
+            </div>
+            <div className="legend-grid">
+              {aqiLevels.map(level => (
+                <div 
+                  className={`legend-item ${selectedSeverity === level.status.toLowerCase() ? 'legend-selected' : ''}`} 
+                  key={level.status}
+                  onClick={() => setSelectedSeverity(
+                    selectedSeverity === level.status.toLowerCase() ? 'all' : level.status.toLowerCase()
+                  )}
+                  title="Click to filter map by this severity"
+                >
+                  <div className="legend-color-dot" style={{ backgroundColor: level.color }} />
+                  <div className="legend-text">
+                    <strong>{level.status}</strong>
+                    <span className="legend-range">
+                      ({level.range[0]}-{level.range[1] === Infinity ? '301+' : level.range[1]})
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </motion.div>
 
-          {/* Feed Card */}
+          {/* Real-time Telemetry Event Log */}
           <motion.div 
             className="glass-panel"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <div className="panel-title"><Rss size={18} /> Event Log Feed</div>
-            <LiveFeed feed={feed} />
+            <div className="panel-title">
+              <Rss size={18} /> 
+              <span>Live Sensor Activity Log</span>
+            </div>
+            <LiveFeed 
+              feed={feed} 
+              stations={stations}
+              onSelectStation={handleSelectStation}
+            />
           </motion.div>
         </div>
       </div>
 
-      {/* Comparison Chart Panel */}
+      {/* Comparison & Hotspot Ranking Panel */}
       <motion.div 
         className="glass-panel chart-card"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.7 }}
       >
-        <div className="panel-title"><BarChart3 size={18} /> Top 15 Most Polluted Locations</div>
-        <ComparisonChart topStations={topStations} />
+        <div className="panel-title">
+          <BarChart3 size={18} /> 
+          <span>Top 15 Most Polluted Stations (Click to View on Map)</span>
+        </div>
+        <ComparisonChart 
+          topStations={topStations} 
+          onSelectStation={handleSelectStation}
+        />
       </motion.div>
 
-      {/* Back to Top FAB */}
+      {/* Floating Scroll to Top FAB */}
       {showScrollTop && (
         <motion.button 
           className="fab" 
           onClick={scrollToTop}
-          title="Back to Top"
+          title="Return to Top"
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
