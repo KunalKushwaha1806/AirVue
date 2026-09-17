@@ -20,6 +20,7 @@ import { LiveFeed } from './components/LiveFeed';
 import { MapDashboard } from './components/MapDashboard';
 import { SearchFilter } from './components/SearchFilter';
 import { aqiLevels } from './utils/aqi';
+import { getFallbackStations, getFallbackStats, fallbackFeed } from './utils/fallbackData';
 import type { Station, Stats, FeedItem, ViewMode } from './types/station';
 import './styles/global.css';
 
@@ -48,13 +49,25 @@ export const App: React.FC = () => {
   const fetchDashboardData = useCallback(async (includeStations = true) => {
     try {
       const fetchPromises: Promise<any>[] = [
-        fetch('/api/stats').then(res => res.json()),
-        fetch('/api/top-polluted?limit=15').then(res => res.json()),
-        fetch('/api/feed').then(res => res.json())
+        fetch('/api/stats').then(res => {
+          if (!res.ok) throw new Error(`API stats returned ${res.status}`);
+          return res.json();
+        }),
+        fetch('/api/top-polluted?limit=15').then(res => {
+          if (!res.ok) throw new Error(`API top-polluted returned ${res.status}`);
+          return res.json();
+        }),
+        fetch('/api/feed').then(res => {
+          if (!res.ok) throw new Error(`API feed returned ${res.status}`);
+          return res.json();
+        })
       ];
 
       if (includeStations) {
-        fetchPromises.push(fetch('/api/stations').then(res => res.json()));
+        fetchPromises.push(fetch('/api/stations').then(res => {
+          if (!res.ok) throw new Error(`API stations returned ${res.status}`);
+          return res.json();
+        }));
       }
 
       const results = await Promise.all(fetchPromises);
@@ -68,7 +81,16 @@ export const App: React.FC = () => {
       }
       setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (error) {
-      console.error("Error fetching AirVue telemetry:", error);
+      console.warn("Live API stream unavailable, utilizing cached telemetry grid:", error);
+      setStations((prev) => {
+        if (prev.length > 0) return prev;
+        const fbStations = getFallbackStations();
+        setStats(getFallbackStats(fbStations));
+        setTopStations(fbStations.slice(0, 15).sort((a, b) => b.aqi - a.aqi));
+        setFeed(fallbackFeed);
+        return fbStations;
+      });
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     }
   }, []);
 

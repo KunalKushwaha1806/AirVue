@@ -2,15 +2,20 @@
   "name": "airvue-root",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
+    "vercel-build": "npm run build --prefix client",
+    "build": "npm run build --prefix client",
     "install:all": "npm install && npm install --prefix client && npm install --prefix server",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npm run build --prefix client",
     "start": "node server/server.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
   "devDependencies": {
     "concurrently": "^8.2.2"
   }
