@@ -1,162 +1,132 @@
-# 🌬️ AirVue — Global Air Quality Monitor
+# 🌬️ AirVue — Global Air Quality Intelligence & Live Telemetry
 
-AirVue is a **real-time, interactive AQI (Air Quality Index) dashboard** that visualizes simulated data from **3,500+ monitoring stations** on a sleek dark-blue, glassmorphism UI.  
-It includes an interactive Leaflet map (clustered markers + heatmap), a live-updating Chart.js bar chart of the most polluted locations, a real-time feed, and smooth GSAP animations.
+AirVue is a **real-time, interactive AQI (Air Quality Index) dashboard** that visualizes telemetry from **3,800+ micro-monitoring stations** on an ultra-modern, dark-mode glassmorphic interface.  
 
-✨ **Live Demo:** *https://airvue.onrender.com/*
+✨ **Live Demo:** [https://air-vue-five.vercel.app/](https://air-vue-five.vercel.app/)
 
 ---
 
 ## 📖 Overview
-- Interactive map showing AQI at thousands of stations (markers + clustering + heatmap).  
-- Animated bar chart for top **15 most polluted** locations (updates automatically).  
-- Live feed with recent station updates and a stats panel (stations, average AQI, counts).  
-- UI: glassmorphism cards, particle background, responsive layout, GSAP animations.
+- **Watermark-free Interactive Map**: Powered by Leaflet with high-resolution ArcGIS Dark Gray Canvas, Satellite Imagery, and OpenStreetMap basemaps.
+- **Accurate Geocoding**: Covers all 28 Indian States & UTs with authentic CPCB/SAFAR neighborhood monitoring coordinates (Delhi NCR, Mumbai MMR, Bengaluru, Kolkata, Chennai, Hyderabad, Pune, Ahmedabad, and more).
+- **True AQI Cluster Badges**: Cluster pins dynamically compute and display the **real average AQI** and severity color scale, accompanied by station counts.
+- **Interactive Fly-To Navigation**: Search for any city or station, or click any alert in the live event feed or top polluted chart to smoothly animate the map directly to that sensor.
+- **Station Detail Card**: Floating glassmorphic card displaying real-time PM2.5, PM10, NO2, Temperature, Humidity, and contextual health guidance.
+- **Ranked Leaderboard & Chart**: Toggle between Chart.js animated bar visualization and an interactive Top 15 Leaderboard table.
+- **Fullstack Serverless on Vercel**: Express API seamlessly served via Vercel Serverless Functions with offline/cold-start resilient telemetry caching.
 
 ---
 
 ## 🚀 Key Features
-- 🌍 **Interactive Map (Leaflet)** — pan, zoom, marker popups with real geographic coordinates.  
-- 📍 **Marker Clustering** — handles dense data sets using `leaflet.markercluster`.  
-- 🔥 **Heatmap** — pollution density via `leaflet.heat`.  
-- ⚡ **Live Simulation** — AQI values are simulated & updated periodically (no external AQI API needed).  
-- 📊 **Charts** — `Chart.js` shows real-time top polluted locations.  
-- 🎨 **Animations** — `GSAP` for entrance & UI animations.  
-- 📱 **Responsive Design** — works on desktop and mobile with adaptive particle rendering.  
-- 🗺️ **Accurate Area Mapping** — 200+ named areas across 20 cities with real-world lat/lng coordinates.
+
+- 🗺️ **Multi-Layer Basemaps (No API Key Required)**:
+  - 🌙 **Dark Canvas** — ArcGIS World Dark Gray Base + Reference Labels (Clean, zero watermark)
+  - 🛰️ **Satellite Imagery** — High-resolution ArcGIS World Imagery
+  - 🗺️ **Streets** — OpenStreetMap Standard
+- 📍 **Smart AQI Clustering**: Calculates weighted regional average AQIs dynamically using Leaflet MarkerCluster.
+- 🔥 **Pollution Density Heatmap**: Continuous air quality heat gradient visualization using `leaflet.heat`.
+- 🔍 **Instant Search & Autocomplete**: Search by city, state, or neighborhood station with live AQI indicator pills.
+- ⚡ **Real-Time Simulation Stream**: Continuous micro-fluctuations simulating atmospheric dynamics.
+- 📊 **Pollution Comparison**: Real-time identification of critical air quality hotspots.
+- 📱 **Fully Responsive**: Optimized for high-resolution desktop monitors, laptops, tablets, and smartphones.
 
 ---
 
 ## ⚡ Performance Optimizations
 
-AirVue is built for speed even with 3,500+ data points rendering simultaneously:
-
 | Optimization | Technique |
 |---|---|
 | **O(1) AQI Lookup** | Precomputed 502-entry table replaces linear `.find()` scans |
-| **Single-Pass Stats** | All 4 statistics computed in 1 loop instead of 3 separate array passes |
+| **Single-Pass Network Stats** | All statistical breakdowns computed in a single array loop |
 | **Min-Heap Top-K** | Chart data uses heap-based selection — O(n log 15) vs O(n log n) full sort |
-| **Lazy Popups** | Popup HTML built on-click, not pre-allocated for all 3,500 markers |
-| **Page Visibility API** | Background intervals pause when the tab is hidden |
-| **DOM Caching** | Key elements cached once at init, no repeated `getElementById` calls |
-| **CSS Containment** | `contain: content` on panels prevents layout thrashing across components |
-| **GPU Optimization** | Removed `backdrop-filter` and `::before` from 3,500 marker elements |
-| **Preconnect Hints** | DNS/TLS latency reduced for CDN domains via `<link rel="preconnect">` |
-| **Deferred Scripts** | Non-critical scripts load with `defer` to unblock HTML parsing |
-| **Mobile Adaptive** | Particle count halved (30 → 15) on mobile for smoother rendering |
+| **Lazy Popups & Drawers** | Component state and popups rendered on-demand to save memory |
+| **Page Visibility API** | Background simulation intervals automatically pause when tab is inactive |
+| **Zero-Watermark Tiles** | High-performance ESRI canvas eliminating third-party key limits |
+| **Chunked Loading** | RequestAnimationFrame and chunked marker addition for 3,800+ markers |
+| **Resilient Telemetry Cache** | Client-side fallback guarantees instant rendering on cold starts |
 
 ---
 
-## 🛠️ Libraries & External Resources
+## 🛠️ Tech Stack & Libraries
 
-**Map & Map Layers**
-- [Leaflet.js](https://leafletjs.com/) — interactive map UI (v1.9.4)  
-- [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster) — marker clustering (v1.5.3)  
-- [Leaflet.heat](https://github.com/Leaflet/Leaflet.heat) — heatmap visualization (v0.2.0)  
-- **Map Tiles**: CARTO Dark  
-  - URL: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png`  
-  - Attribution: © OpenStreetMap contributors © CARTO  
-
-**Charts & Animations**
-- [Chart.js](https://www.chartjs.org/) — comparison bar chart  
-- [GSAP](https://greensock.com/gsap/) — UI animations (v3.12.2)  
-- [ScrollToPlugin](https://greensock.com/docs/v3/Plugins/ScrollToPlugin) — smooth scrolling  
-
-**UI Enhancements**
-- [Font Awesome](https://fontawesome.com/) — icons (v6.4.0)  
-- [Google Fonts: Inter](https://fonts.google.com/specimen/Inter) — typography  
+- **Frontend**: [React 19](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/)
+- **Styling & Motion**: Vanilla CSS (Glassmorphism design tokens), [Framer Motion](https://www.framer.com/motion/)
+- **Mapping**: [Leaflet](https://leafletjs.com/), [Leaflet.markercluster](https://github.com/Leaflet/Leaflet.markercluster), [Leaflet.heat](https://github.com/Leaflet/Leaflet.heat)
+- **Charts & Icons**: [Chart.js](https://www.chartjs.org/) & [react-chartjs-2](https://react-chartjs-2.js.org/), [Lucide React](https://lucide.dev/)
+- **Backend**: [Express.js](https://expressjs.com/), [Node.js](https://nodejs.org/), [Vercel Serverless Functions](https://vercel.com/docs/functions)
 
 ---
 
-## 🚀 Running the Project Locally
-You can run this project with or without a local server.
+## 🚀 Running Locally
 
-### Quick Method (No Server Required)
-Simply open the `index.html` file directly in your web browser.
+### Prerequisites
+- Node.js (v18 or higher)
+- npm
 
-**Example:** Double-click the file or right-click → *Open with* → Google Chrome.
+### Installation & Startup
 
-### Recommended Method (Using a Local Server)
-Using a local server is the best practice for web development. Here's a quick way to start one using Python's built-in module.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/KunalKushwaha1806/AirVue.git
+   cd AirVue
+   ```
 
-1. Make sure you have Python installed.  
-2. Open your terminal or command prompt in the project's root directory.  
-3. Run the following command:
+2. **Install all dependencies:**
+   ```bash
+   npm install
+   ```
 
-```bash
-python -m http.server 8000
-```
+3. **Start the local fullstack development environment:**
+   ```bash
+   npm run dev
+   ```
+   This concurrently runs:
+   - Express Backend: `http://localhost:5000`
+   - Vite React Client: `http://localhost:5173`
 
-Once the server is running, open your browser and go to: [http://localhost:8000](http://localhost:8000)
+4. Open your browser and navigate to:
+   **[http://localhost:5173](http://localhost:5173)** (or **[http://localhost:5000](http://localhost:5000)**)
 
 ---
 
-## 📁 File Structure
-The project is organized into three core files for clean separation of concerns.
+## 📁 Project Structure
 
 ```
 AirVue/
-│
-├── index.html      # App shell — CDN library imports, preconnect hints, and semantic structure
-├── style.css       # Glassmorphism theme, layout, responsive design, and GPU-optimized rendering
-├── script.js       # Core logic — data simulation, map rendering, charts, animations, and optimizations
-└── assets/         # Demo screenshots and images
+├── api/
+│   └── index.js            # Vercel Serverless Function entrypoint
+├── client/
+│   ├── src/
+│   │   ├── components/     # MapDashboard, SearchFilter, ComparisonChart, etc.
+│   │   ├── styles/         # Glassmorphism design tokens & global CSS
+│   │   ├── types/          # TypeScript data models (Station, Stats, ViewMode)
+│   │   ├── utils/          # AQI scales, health advisories, fallback data
+│   │   ├── App.tsx         # Main interactive dashboard container
+│   │   └── main.tsx        # React entrypoint
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── server/
+│   ├── server.js           # Express API server (standalone)
+│   ├── simulation.js       # Geocoded micro-station telemetry engine
+│   └── aqiLookup.js        # O(1) AQI calculation lookup
+├── vercel.json             # Vercel deployment routing & rewrites
+└── package.json            # Root workspaces configuration
 ```
 
 ---
 
-## 🔗 APIs & Data Source
+## ☁️ Deployment on Vercel
 
-### AQI Data Simulation
-- This project does **not** call any external AQI APIs.  
-- AQI values are simulated locally within `script.js` for fast performance and a dynamic UX.  
-- The `generateDenseData()` function creates **3,500 data points** across 47 base cities.  
-- **200+ named areas** (Connaught Place, Bandra, Koramangala, etc.) use real geographic coordinates.  
-- AQI values are updated periodically via `setInterval`, with automatic pausing when the tab is hidden.
+The project is pre-configured for 1-click Vercel deployment:
 
-### Map Tiles API
-- The interactive map background is provided by **CARTO** using **OpenStreetMap** data.  
+1. Import the repository in [Vercel Dashboard](https://vercel.com/new).
+2. Leave settings as default (detected from `vercel.json`).
+3. Click **Deploy**.
 
-**Source URL:**  
-```
-https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
-```
-
-**Attribution:** © OpenStreetMap contributors © CARTO
+Live production deployment: **[https://air-vue-five.vercel.app/](https://air-vue-five.vercel.app/)**
 
 ---
 
 ## 🧾 License
-This project is licensed under the **Apache 2.0 License**.  
-
-Please see the LICENSE file in the repository for full details.
-
----
-
-## 🙏 Credits & Acknowledgements
-This project was made possible by the following amazing open-source libraries and services:
-
-- **Map & Data:** OpenStreetMap & CARTO  
-- **Libraries:**  
-  - Leaflet.js  
-  - Leaflet.markercluster  
-  - Leaflet.heat  
-  - Chart.js  
-  - GSAP (GreenSock Animation Platform)  
-  - Font Awesome  
-  - Google Fonts  
-
----
-
-## 🛠️ Getting Started
-
-```bash
-# Clone the repository
-git clone https://github.com/KunalKushwaha1806/AirVue.git
-
-# Navigate to the project folder
-cd AirVue
-
-# Open in browser (or use a local server)
-python -m http.server 8000
-```
+This project is licensed under the **Apache 2.0 License**.
